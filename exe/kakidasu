@@ -1,0 +1,51 @@
+require 'yomikomu'
+require 'optparse'
+
+verbose = false
+executor = nil
+
+opts = OptionParser.new{|o|
+  o.on('--verify'){
+    executor = Proc.new{|file|
+      raise "TODO"
+    }
+  }
+  o.on('--all-remove'){
+    ::Yomikomu.remove_all_compiled_iseq
+  }
+  o.on('--remove'){
+    executor = Proc.new{|file|
+      ::Yomikomu.remove_compiled_iseq(file)
+    }
+  }
+  o.on('-v', '--verbose'){
+    $VERBOSE = true
+  }
+  o.on('-d', '--debug'){
+    ENV['YOMIKOMU_DEBUG'] = 'true'
+  }
+}
+
+executor = Proc.new{|file|
+  begin
+    ::Yomikomu.compile_and_save_iseq(file)
+  rescue SyntaxError => e
+    STDERR.puts e
+  end
+} unless executor # default
+
+opts.parse(ARGV)
+
+require 'rbconfig'
+paths = ARGV.empty? ? RbConfig::CONFIG['libdir'] : ARGV
+
+paths.each{|path|
+  if File.directory?(path)
+    pattern = File.join(path, '**/*.rb')
+    Dir.glob(pattern){|file|
+      executor.call(file)
+    }
+  else
+    executor(path)
+  end
+}
