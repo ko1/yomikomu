@@ -27,13 +27,13 @@ Or install it yourself as:
 
 You can use the following configuration with environment variables.
 
-* YOMIKOMU_STORAGE to choose storage:
+* YOMIKOMU_STORAGE (default: fs): choose storage type.
   * 'fs' (default) stores binaries in the same directory (for examlple, `x.rb` will be compiled to `x.rb.yarb` in the same directory).
   * 'fs2' stores binaries in specific directory.
   * 'dbm' stores binaries using dbm
-* YOMIKOMU_STORAGE_DIR to choose directory binary files are stored (default: "~/.ruby_binaries").
-* YOMIKOMU_AUTO_COMPILE: if this value is `true`, then compile all required scripts implicitly (default: false).
-* YOMIKOMU_DEBUG: show many information.
+* YOMIKOMU_STORAGE_DIR (default: "~/.ruby_binaries"): choose directory where binary files are stored.
+* YOMIKOMU_AUTO_COMPILE (default: false): if this value is `true`, then compile all required scripts implicitly.
+* YOMIKOMU_DEBUG (default: not defined): show many information.
 
 ### Compile and store instruction sequences
 
