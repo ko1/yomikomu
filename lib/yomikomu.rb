@@ -11,6 +11,7 @@ module Yomikomu
   end
   YOMIKOMU_PREFIX = "#{yomu_dir}/cb."
   YOMIKOMU_AUTO_COMPILE = ENV['YOMIKOMU_AUTO_COMPILE'] == 'true'
+  YOMIKOMU_USE_MMAP = ENV['YOMIKOMU_USE_MMAP']
 
   if $VERBOSE
     def self.info
@@ -149,6 +150,25 @@ module Yomikomu
         Yomikomu.debug{ "rm #{path}" }
         FileUtils.rm(path)
       }
+    end
+  end
+
+  if YOMIKOMU_USE_MMAP
+    require 'mmapped_string'
+    Yomikomu.info{ "[RUBY_YOMIKOMU] use mmap" }
+
+    module MMapFile
+      def read_compiled_iseq fname, iseq_key
+        MmappedString.open(iseq_key)
+      end
+    end
+
+    class FSStorage
+      prepend MMapFile
+    end
+
+    class FS2Storage
+      prepend MMapFile
     end
   end
 
