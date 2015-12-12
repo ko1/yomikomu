@@ -1,8 +1,9 @@
 # Yomikomu
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/yomikomu`. To experiment with that code, run `bin/console` for an interactive prompt.
+* `yomikomu` gem enables to load compiled instruction sequences (bytecodes).
+* `kakidasu` command compiles and stores compiled instruction sequences (bytecodes).
 
-TODO: Delete this and the text above, and describe your gem
+This gem requires Ruby 2.3.0.
 
 ## Installation
 
@@ -22,7 +23,32 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Configuration
+
+You can use the following configuration with environment variables.
+
+* YOMIKOMU_STORAGE to choose storage:
+  * 'fs' (default) stores binaries in the same directory (for examlple, `x.rb` will be compiled to `x.rb.yarb` in the same directory).
+  * 'fs2' stores binaries in specific directory.
+  * 'dbm' stores binaries using dbm
+* YOMIKOMU_STORAGE_DIR to choose directory binary files are stored (default: "~/.ruby_binaries").
+* YOMIKOMU_AUTO_COMPILE: if this value is `true`, then compile all required scripts implicitly (default: false).
+* YOMIKOMU_DEBUG: show many information.
+
+### Compile and store instruction sequences
+
+You only need to use the following command.
+
+```
+$ kakidasu [file or dir] ...
+```
+
+Compile specified file or files (*.rb) in specified directory.
+If no files or directories are specified, then use "libdir" of installed Ruby.
+
+### Load compiled binary
+
+You only need to require `yomikomu`.
 
 ## Development
 
@@ -32,7 +58,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/yomikomu.
+Bug reports and pull requests are welcome on GitHub at https://github.com/ko1/yomikomu.
 
 
 ## License
