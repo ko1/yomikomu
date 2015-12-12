@@ -1,43 +1,45 @@
-require 'yomikomu'
+#! /usr/bin/env ruby
+
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+
 require 'optparse'
 
 verbose = false
 executor = nil
 
 opts = OptionParser.new{|o|
-  o.on('--verify'){
+  o.on('--verify [original script]', 'verify mode'){
     executor = Proc.new{|file|
       raise "TODO"
     }
   }
-  o.on('--all-remove'){
-    ::Yomikomu.remove_all_compiled_iseq
-  }
-  o.on('--remove'){
+  o.on('--remove [original script]', 'remove specific compiled iseq'){
     executor = Proc.new{|file|
       ::Yomikomu.remove_compiled_iseq(file)
     }
   }
+  o.on('--remove-all', 'remove all compiled iseq'){
+    ::Yomikomu.remove_all_compiled_iseq
+  }
   o.on('-v', '--verbose'){
     $VERBOSE = true
-  }
-  o.on('-d', '--debug'){
     ENV['YOMIKOMU_DEBUG'] = 'true'
   }
 }
 
 executor = Proc.new{|file|
   begin
-    ::Yomikomu.compile_and_save_iseq(file)
+    ::Yomikomu.compile_and_store_iseq(file)
   rescue SyntaxError => e
     STDERR.puts e
   end
 } unless executor # default
 
-opts.parse(ARGV)
+opts.parse!(ARGV)
 
+require 'yomikomu'
 require 'rbconfig'
-paths = ARGV.empty? ? RbConfig::CONFIG['libdir'] : ARGV
+paths = ARGV.empty? ? [RbConfig::CONFIG['libdir']] : ARGV
 
 paths.each{|path|
   if File.directory?(path)
@@ -46,6 +48,6 @@ paths.each{|path|
       executor.call(file)
     }
   else
-    executor(path)
+    executor.call(path)
   end
 }
