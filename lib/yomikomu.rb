@@ -1,12 +1,6 @@
 require "yomikomu/version"
 
 module Yomikomu
-  class NullStorage
-    def load_iseq fname; end
-    def compile_and_store_iseq fname; end
-    def remove_compiled_iseq fname; end
-  end
-
   STATISTICS = Hash.new(0)
 
   unless yomu_dir = ENV['YOMIKOMU_STORAGE_DIR']
@@ -38,6 +32,12 @@ module Yomikomu
   else
     def self.debug
     end
+  end
+
+  class NullStorage
+    def load_iseq fname; end
+    def compile_and_store_iseq fname; end
+    def remove_compiled_iseq fname; end
   end
 
   class BasicStorage
