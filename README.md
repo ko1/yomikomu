@@ -4,6 +4,7 @@
 * `kakidasu` command compiles and stores compiled instruction sequences (bytecodes).
 
 This gem requires Ruby 2.3.0.
+Most of code is ported from `ruby/sample/iseq_load.rb`.
 
 ## Installation
 
