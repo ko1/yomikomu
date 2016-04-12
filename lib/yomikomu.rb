@@ -13,13 +13,17 @@ module Yomikomu
   YOMIKOMU_AUTO_COMPILE = ENV['YOMIKOMU_AUTO_COMPILE'] == 'true'
   YOMIKOMU_USE_MMAP = ENV['YOMIKOMU_USE_MMAP']
 
+  def self.status
+    STDERR.puts "[YOMIKOMU:INFO] (pid:#{Process.pid}) " +
+                ::Yomikomu::STATISTICS.map{|k, v| "#{k}: #{v}"}.join(' ,')
+  end
+
   if $VERBOSE
     def self.info
       STDERR.puts "[YOMIKOMU:INFO] (pid:#{Process.pid}) #{yield}"
     end
     at_exit{
-      STDERR.puts "[YOMIKOMU:INFO] (pid:#{Process.pid}) " +
-                  ::Yomikomu::STATISTICS.map{|k, v| "#{k}: #{v}"}.join(' ,')
+      status
     }
   else
     def self.info
@@ -72,7 +76,7 @@ module Yomikomu
 
     def compile_and_store_iseq fname, iseq_key = iseq_key_name(fname)
       ::Yomikomu::STATISTICS[:compiled] += 1
-      ::Yomikomu.debug{ "[RUBY_COMPILED_FILE] compile #{fname} into #{iseq_key}" }
+      ::Yomikomu.debug{ "compile #{fname} into #{iseq_key}" }
       iseq = RubyVM::InstructionSequence.compile_file(fname)
 
       binary = iseq.to_binary(extra_data(fname))
