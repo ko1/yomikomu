@@ -146,6 +146,10 @@ module Yomikomu
     end
   end
 
+  class FSSGZtorage < FSStorage
+
+  end
+
   class FS2Storage < FSStorage
     def initialize
       super
@@ -169,7 +173,7 @@ module Yomikomu
     end
   end
 
-  class FS2GZStorage < FS2Storage
+  module GZFileStorage
     def initialize
       require 'zlib'
       super
@@ -190,6 +194,14 @@ module Yomikomu
         f.write(binary)
       }
     end
+  end
+
+  class FSGZStorage < FSStorage
+    include GZFileStorage
+  end
+
+  class FS2GZStorage < FS2Storage
+    include GZFileStorage
   end
 
   if YOMIKOMU_USE_MMAP
@@ -270,19 +282,23 @@ module Yomikomu
   end
 
   # select storage
-  STORAGE = case ENV['YOMIKOMU_STORAGE']
+  STORAGE = case storage = ENV['YOMIKOMU_STORAGE']
             when 'dbm'
               DBMStorage.new
             when 'fs'
               FSStorage.new
+            when 'fsgz'
+              FSGZStorage.new
             when 'fs2'
               FS2Storage.new
             when 'fs2gz'
               FS2GZStorage.new
             when 'null'
               NullStorage.new
-            else
+            when nil
               FSStorage.new
+            else
+              raise "Unknown storage type: #{storage}"
             end
 
   Yomikomu.info{ "[RUBY_YOMIKOMU] use #{STORAGE.class}" }
