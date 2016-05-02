@@ -3,13 +3,16 @@ require "yomikomu/version"
 module Yomikomu
   STATISTICS = Hash.new(0)
 
-  unless yomu_dir = ENV['YOMIKOMU_STORAGE_DIR']
-    yomu_dir = File.expand_path("~/.ruby_binaries")
-    unless File.exist?(yomu_dir)
-      Dir.mkdir(yomu_dir)
+  def self.prefix
+    unless yomu_dir = ENV['YOMIKOMU_STORAGE_DIR']
+      yomu_dir = File.expand_path("~/.ruby_binaries")
+      unless File.exist?(yomu_dir)
+        Dir.mkdir(yomu_dir)
+      end
     end
+    "#{yomu_dir}/cb."
   end
-  YOMIKOMU_PREFIX = "#{yomu_dir}/cb."
+
   YOMIKOMU_AUTO_COMPILE = ENV['YOMIKOMU_AUTO_COMPILE'] == 'true'
   YOMIKOMU_USE_MMAP = ENV['YOMIKOMU_USE_MMAP']
 
@@ -77,7 +80,11 @@ module Yomikomu
     def compile_and_store_iseq fname, iseq_key = iseq_key_name(fname)
       ::Yomikomu::STATISTICS[:compiled] += 1
       ::Yomikomu.debug{ "compile #{fname} into #{iseq_key}" }
-      iseq = RubyVM::InstructionSequence.compile_file(File.expand_path(fname))
+      begin
+        iseq = RubyVM::InstructionSequence.compile_file(File.expand_path(fname))
+      rescue SyntaxError
+        puts 
+      end
 
       binary = iseq.to_binary(extra_data(fname))
       write_compiled_iseq(fname, iseq_key, binary)
@@ -102,11 +109,6 @@ module Yomikomu
   class FSStorage < BasicStorage
     def initialize
       super
-      require 'fileutils'
-      @dir = YOMIKOMU_PREFIX + "files"
-      unless File.directory?(@dir)
-        FileUtils.mkdir_p(@dir)
-      end
     end
 
     def remove_compiled_iseq fname
@@ -145,6 +147,16 @@ module Yomikomu
   end
 
   class FS2Storage < FSStorage
+    def initialize
+      super
+
+      require 'fileutils'
+      @dir = Yomikomu.prefix + "files"
+      unless File.directory?(@dir)
+        FileUtils.mkdir_p(@dir)
+      end
+    end
+
     def iseq_key_name fname
       File.join(@dir, fname.gsub(/[^A-Za-z0-9\._-]/){|c| '%02x' % c.ord} + '.yarb') # special directory
     end
@@ -153,6 +165,29 @@ module Yomikomu
       Dir.glob(File.join(@dir, '**/*.yarb')){|path|
         Yomikomu.debug{ "rm #{path}" }
         FileUtils.rm(path)
+      }
+    end
+  end
+
+  class FS2GZStorage < FS2Storage
+    def initialize
+      require 'zlib'
+      super
+    end
+
+    def iseq_key_name fname
+      super + '.gz'
+    end
+
+    def read_compiled_iseq fname, iseq_key
+      Zlib::GzipReader.open(iseq_key){|f|
+        f.read
+      }
+    end
+
+    def write_compiled_iseq fname, iseq_key, binary
+      Zlib::GzipWriter.open(iseq_key){|f|
+        f.write(binary)
       }
     end
   end
@@ -179,7 +214,7 @@ module Yomikomu
   class DBMStorage < BasicStorage
     def initialize
       require 'dbm'
-      @db = DBM.open(YOMIKOMU_PREFIX+'db')
+      @db = DBM.open(Yomikomu.prefix +'db')
     end
 
     def remove_compiled_iseq fname
@@ -242,6 +277,8 @@ module Yomikomu
               FSStorage.new
             when 'fs2'
               FS2Storage.new
+            when 'fs2gz'
+              FS2GZStorage.new
             when 'null'
               NullStorage.new
             else
