@@ -77,7 +77,7 @@ module Yomikomu
     def compile_and_store_iseq fname, iseq_key = iseq_key_name(fname)
       ::Yomikomu::STATISTICS[:compiled] += 1
       ::Yomikomu.debug{ "compile #{fname} into #{iseq_key}" }
-      iseq = RubyVM::InstructionSequence.compile_file(fname)
+      iseq = RubyVM::InstructionSequence.compile_file(File.expand_path(fname))
 
       binary = iseq.to_binary(extra_data(fname))
       write_compiled_iseq(fname, iseq_key, binary)
