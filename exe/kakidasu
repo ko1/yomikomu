@@ -2,6 +2,8 @@
 
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 
+require 'yomikomu'
+require 'rbconfig'
 require 'optparse'
 
 verbose = false
@@ -37,8 +39,6 @@ executor = Proc.new{|file|
 
 opts.parse!(ARGV)
 
-require 'yomikomu'
-require 'rbconfig'
 paths = ARGV.empty? ? [RbConfig::CONFIG['libdir']] : ARGV
 
 paths.each{|path|
