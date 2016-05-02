@@ -6,10 +6,8 @@ module Yomikomu
   def self.prefix
     unless yomu_dir = ENV['YOMIKOMU_STORAGE_DIR']
       yomu_dir = File.expand_path("~/.ruby_binaries")
-      unless File.exist?(yomu_dir)
-        Dir.mkdir(yomu_dir)
-      end
     end
+    Dir.mkdir(yomu_dir) unless File.exist?(yomu_dir)
     "#{yomu_dir}/cb."
   end
 
@@ -77,13 +75,13 @@ module Yomikomu
       "SHA-1:#{::Digest::SHA1.file(fname).digest}"
     end
 
-    def compile_and_store_iseq fname, iseq_key = iseq_key_name(fname)
-      ::Yomikomu::STATISTICS[:compiled] += 1
+    def compile_and_store_iseq fname, iseq_key = iseq_key_name(fname = File.expand_path(fname))
       ::Yomikomu.debug{ "compile #{fname} into #{iseq_key}" }
       begin
-        iseq = RubyVM::InstructionSequence.compile_file(File.expand_path(fname))
+        iseq = RubyVM::InstructionSequence.compile_file(fname)
         binary = iseq.to_binary(extra_data(fname))
         write_compiled_iseq(fname, iseq_key, binary)
+        ::Yomikomu::STATISTICS[:compiled] += 1
         iseq
       rescue SyntaxError, RuntimeError => e
         puts "#{e}: #{fname}"
@@ -263,6 +261,70 @@ module Yomikomu
       date_key = date_key_name(fname)
       @db[iseq_key] = binary
       @db[date_key] = Time.now.to_i
+    end
+  end
+
+  class FlatFileStorage < BasicStorage
+    def initialize
+      super
+      require 'fileutils'
+
+      index_path = Yomikomu.prefix + 'ff_index'
+      data_path  = Yomikomu.prefix + 'ff_data'
+
+      @updated = false
+
+      if File.exist?(index_path)
+        open(index_path, 'rb'){|f| @index = Marshal.load(f)}
+      else
+        @index = {}
+        open(data_path, 'w'){} # touch
+      end
+
+      @data_file = open(data_path, 'a+b')
+
+      at_exit{
+        if @updated
+          open(index_path, 'wb'){|f| Marshal.dump(@index, f)}
+          Yomikomu.info{'FlatFile: update'}
+        end
+      }
+    end
+
+    def remove_compiled_iseq fname
+      raise 'unsupported'
+    end
+
+    private
+
+    def compiled_iseq_exist? fname, iseq_key
+      @index[iseq_key]
+    end
+
+    def compiled_iseq_is_younger? fname, iseq_key
+      offset, size, date = @index[iseq_key]
+      date.to_i >= File.mtime(fname).to_i
+    end
+
+    def read_compiled_iseq fname, iseq_key
+      offset, size, date = @index[iseq_key]
+      @data_file.pos = offset
+      data = @data_file.read(size)
+      raise "size is not match" if data.size != size
+      data
+    end
+
+    def write_compiled_iseq fname, iseq_key, binary
+      raise "compiled binary for #{fname} already exists. flatfile does not support overwrite." if compiled_iseq_exist?(fname, iseq_key)
+
+      @data_file.seek 0, IO::SEEK_END
+      offset = @data_file.tell
+      size = binary.size
+      date = Time.now.to_i
+      @data_file.write(binary)
+      @index[iseq_key] = [offset, size, date]
+
+      @updated = true
     end
   end
 
