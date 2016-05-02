@@ -265,12 +265,17 @@ module Yomikomu
   end
 
   class FlatFileStorage < BasicStorage
+    def index_path
+      Yomikomu.prefix + 'ff_index'
+    end
+
+    def data_path
+      Yomikomu.prefix + 'ff_data'
+    end
+
     def initialize
       super
       require 'fileutils'
-
-      index_path = Yomikomu.prefix + 'ff_index'
-      data_path  = Yomikomu.prefix + 'ff_data'
 
       @updated = false
 
@@ -309,9 +314,9 @@ module Yomikomu
     def read_compiled_iseq fname, iseq_key
       offset, size, date = @index[iseq_key]
       @data_file.pos = offset
-      data = @data_file.read(size)
-      raise "size is not match" if data.size != size
-      data
+      binary = @data_file.read(size)
+      raise "size is not match" if binary.size != size
+      binary
     end
 
     def write_compiled_iseq fname, iseq_key, binary
@@ -325,6 +330,31 @@ module Yomikomu
       @index[iseq_key] = [offset, size, date]
 
       @updated = true
+    end
+  end
+
+  class FlatFileGZStorage < FlatFileStorage
+    def index_path
+      super + '_gz'
+    end
+
+    def data_path
+      super + '_gz'
+    end
+
+    def initialize
+      super
+      require 'zlib'
+    end
+
+    def read_compiled_iseq fname, iseq_key
+      binary = super
+      Zlib::Inflate.inflate(binary)
+    end
+
+    def write_compiled_iseq fname, iseq_key, binary
+      binary = Zlib::Deflate.deflate(binary)
+      super(fname, iseq_key, binary)
     end
   end
 
@@ -358,6 +388,8 @@ module Yomikomu
               DBMStorage.new
             when 'flatfile'
               FlatFileStorage.new
+            when 'flatfilegz'
+              FlatFileGZStorage.new
             when 'null'
               NullStorage.new
             when nil
