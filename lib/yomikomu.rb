@@ -225,8 +225,9 @@ module Yomikomu
 
   class DBMStorage < BasicStorage
     def initialize
+      super
       require 'dbm'
-      @db = DBM.open(Yomikomu.prefix +'db')
+      @db = DBM.open(Yomikomu.prefix + 'db')
     end
 
     def remove_compiled_iseq fname
@@ -283,8 +284,6 @@ module Yomikomu
 
   # select storage
   STORAGE = case storage = ENV['YOMIKOMU_STORAGE']
-            when 'dbm'
-              DBMStorage.new
             when 'fs'
               FSStorage.new
             when 'fsgz'
@@ -293,6 +292,10 @@ module Yomikomu
               FS2Storage.new
             when 'fs2gz'
               FS2GZStorage.new
+            when 'dbm'
+              DBMStorage.new
+            when 'flatfile'
+              FlatFileStorage.new
             when 'null'
               NullStorage.new
             when nil
