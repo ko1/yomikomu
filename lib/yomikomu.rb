@@ -18,10 +18,10 @@ module Yomikomu
 
   def self.status
     STDERR.puts "[YOMIKOMU:INFO] (pid:#{Process.pid}) " +
-                ::Yomikomu::STATISTICS.map{|k, v| "#{k}: #{v}"}.join(' ,')
+                ::Yomikomu::STATISTICS.map{|k, v| "#{k}: #{v}"}.join(', ')
   end
 
-  if $VERBOSE
+  if $VERBOSE || ENV['YOMIKOMU_INFO'] == 'true'
     def self.info
       STDERR.puts "[YOMIKOMU:INFO] (pid:#{Process.pid}) #{yield}"
     end
