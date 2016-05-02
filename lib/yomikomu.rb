@@ -82,13 +82,13 @@ module Yomikomu
       ::Yomikomu.debug{ "compile #{fname} into #{iseq_key}" }
       begin
         iseq = RubyVM::InstructionSequence.compile_file(File.expand_path(fname))
-      rescue SyntaxError
-        puts 
+        binary = iseq.to_binary(extra_data(fname))
+        write_compiled_iseq(fname, iseq_key, binary)
+        iseq
+      rescue SyntaxError, RuntimeError => e
+        puts "#{e}: #{fname}"
+        nil
       end
-
-      binary = iseq.to_binary(extra_data(fname))
-      write_compiled_iseq(fname, iseq_key, binary)
-      iseq
     end
 
     # def remove_compiled_iseq fname; nil; end # should implement at sub classes
