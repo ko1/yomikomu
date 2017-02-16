@@ -37,7 +37,8 @@ You can use the following configuration with environment variables.
   * 'flatfile' stores binaries in one flat file. Updating is not supported. Use with YOMIKOMU_AUTO_COMPILE.
 * YOMIKOMU_STORAGE_DIR (default: "~/.ruby_binaries"): choose directory where binary files are stored.
 * YOMIKOMU_AUTO_COMPILE (default: false): if this value is `true`, then compile all required scripts implicitly.
-* YOMIKOMU_INFO (default: not defaind): show some information.
+* YOMIKOMU_YOMIKOMANAI (default: not defined): disable all YOMIKOMU features.
+* YOMIKOMU_INFO (default: not defined): show some information.
 * YOMIKOMU_DEBUG (default: not defined): show many information.
 
 ### Compile and store instruction sequences
