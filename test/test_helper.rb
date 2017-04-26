@@ -4,6 +4,8 @@ require 'tmpdir'
 
 tmpdir = Dir.mktmpdir('yomikomu')
 ENV['YOMIKOMU_STORAGE_DIR'] = tmpdir
-ENV['YOMIKOMU_STORAGE'] = 'fs2'
+
 require 'yomikomu'
+Yomikomu.storage = :fs2
+
 require 'minitest/autorun'
