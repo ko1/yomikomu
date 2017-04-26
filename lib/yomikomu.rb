@@ -374,29 +374,35 @@ module Yomikomu
     STORAGE.verify_compiled_iseq fname
   end
 
-  # select storage
-  STORAGE = case storage = ENV['YOMIKOMU_STORAGE']
-            when 'fs'
-              FSStorage.new
-            when 'fsgz'
-              FSGZStorage.new
-            when 'fs2'
-              FS2Storage.new
-            when 'fs2gz'
-              FS2GZStorage.new
-            when 'dbm'
-              DBMStorage.new
-            when 'flatfile'
-              FlatFileStorage.new
-            when 'flatfilegz'
-              FlatFileGZStorage.new
-            when 'null'
-              NullStorage.new
-            when nil
-              FSStorage.new
-            else
-              raise "Unknown storage type: #{storage}"
-            end
+  class << self
+    def storage=(storage)
+      remove_const :STORAGE if const_defined? :STORAGE
+      const_set :STORAGE,
+        case storage.to_s
+        when 'fs'
+          FSStorage.new
+        when 'fsgz'
+          FSGZStorage.new
+        when 'fs2'
+          FS2Storage.new
+        when 'fs2gz'
+          FS2GZStorage.new
+        when 'dbm'
+          DBMStorage.new
+        when 'flatfile'
+          FlatFileStorage.new
+        when 'flatfilegz'
+          FlatFileGZStorage.new
+        when 'null'
+          NullStorage.new
+        when ''
+          FSStorage.new
+        else
+          raise "Unknown storage type: #{storage}"
+        end
+    end
+  end
+  self.storage = ENV['YOMIKOMU_STORAGE']
 
   Yomikomu.info{ "[RUBY_YOMIKOMU] use #{STORAGE.class}" }
 end
