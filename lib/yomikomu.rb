@@ -402,7 +402,9 @@ module Yomikomu
 end
 
 class RubyVM::InstructionSequence
-  def self.load_iseq fname
-    ::Yomikomu::STORAGE.load_iseq(fname)
+  if ENV['YOMIKOMU_YOMIKOMANAI'] != 'true'
+    def self.load_iseq fname
+      ::Yomikomu::STORAGE.load_iseq(fname)
+    end
   end
 end
