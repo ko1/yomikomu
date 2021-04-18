@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require "yomikomu/version"
 
 module Yomikomu
@@ -12,7 +13,7 @@ module Yomikomu
   end
 
   YOMIKOMU_AUTO_COMPILE = ENV['YOMIKOMU_AUTO_COMPILE'] == 'true'
-  YOMIKOMU_USE_MMAP = ENV['YOMIKOMU_USE_MMAP']
+  YOMIKOMU_USE_MMAP = ENV['YOMIKOMU_USE_MMAP'] == 'true'
 
   def self.status
     STDERR.puts "[YOMIKOMU:INFO] (pid:#{Process.pid}) " +
